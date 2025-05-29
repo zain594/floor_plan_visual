@@ -15,6 +15,29 @@ filtered_df = df[df["Project"].isin(selected_project) & df["Floor"].isin(selecte
 
 # Page title
 st.title("🏠 Floor Plan Comparison Dashboard")
+import streamlit as st
+from PIL import Image
+
+st.subheader("📷 Ground Floor Plans")
+
+# Project selector
+project = st.selectbox("Choose Project", ["Bhavisha", "Saiven", "NCC"])
+
+# Image mapping
+image_map = {
+    "Bhavisha": "images/bhavisha_GF.jpg",
+    "Saiven": "images/saiven_GF.jpg",
+    "NCC": "images/ncc_GF.jpg",
+}
+
+# Load and display
+image_path = image_map.get(project)
+if image_path:
+    try:
+        image = Image.open(image_path)
+        st.image(image, caption=f"{project} - Ground Floor", use_column_width=True)
+    except FileNotFoundError:
+        st.warning("Image not found. Make sure it exists in the 'images' folder.")
 
 # Show table
 st.subheader("Data Table")
