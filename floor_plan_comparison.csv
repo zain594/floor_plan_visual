@@ -1,0 +1,61 @@
+Project,Floor,Room,Length (ft),Breadth (ft),Area (sqft)
+Bhavisha Casa Life,GF,Living,8.75,16.2,141.75
+Bhavisha Casa Life,GF,Kitchen,8.75,10.9,95.375
+Bhavisha Casa Life,GF,Utility,10.9,2.25,24.525
+Bhavisha Casa Life,GF,Parking,14.25,14.75,210.1875
+Bhavisha Casa Life,GF,Guest Bedroom 1,10.7,13.1,140.17
+Bhavisha Casa Life,GF,Attached Toilet 1,5.1,7.1,36.21
+Bhavisha Casa Life,GF,Dress 1,3.3,7.1,23.43
+Bhavisha Casa Life,GF,Pooja,0.0,0.0,0.0
+Bhavisha Casa Life,1F,Master Bedroom 2,14.3,13.1,187.33
+Bhavisha Casa Life,1F,Attached Toilet 2,5.1,7.1,36.21
+Bhavisha Casa Life,1F,Dress 2,5.0,5.7,28.5
+Bhavisha Casa Life,1F,Balcony,14.3,3.3,47.19
+Bhavisha Casa Life,1F,Children Bedroom 3,9.5,10.75,102.125
+Bhavisha Casa Life,1F,Dress 3,7.0,5.25,36.75
+Bhavisha Casa Life,1F,Attached Toilet 3,7.0,5.2,36.4
+Bhavisha Casa Life,1F,Family Room,9.25,10.0,92.5
+Bhavisha Casa Life,1F,Sit Out,12.75,6.0,76.5
+Bhavisha Casa Life,2F,Master Bedroom 4,14.3,13.1,187.33
+Bhavisha Casa Life,2F,Attached Toilet 4,5.1,7.1,36.21
+Bhavisha Casa Life,2F,Wash Area & C.Toilet,5.0,5.8,29.0
+Bhavisha Casa Life,2F,Bar Counter,9.25,10.0,92.5
+Bhavisha Casa Life,2F,Terrace,12.75,22.5,286.875
+Saiven Mulberry Groves,GF,Living Room,14.25,16.33,232.7025
+Saiven Mulberry Groves,GF,Kitchen,10.5,11.5,120.75
+Saiven Mulberry Groves,GF,Dining,15.25,11.5,175.375
+Saiven Mulberry Groves,GF,Utility,8.33,6.0,49.98
+Saiven Mulberry Groves,GF,Powder,4.25,6.0,25.5
+Saiven Mulberry Groves,GF,Parking,14.25,14.75,210.1875
+Saiven Mulberry Groves,GF,Garden,20.67,6.0,124.02
+Saiven Mulberry Groves,GF,Garden,7.75,4.25,32.9
+Saiven Mulberry Groves,1F,Bedroom,15.0,11.0,165.0
+Saiven Mulberry Groves,1F,Toilet,5.0,8.42,42.1
+Saiven Mulberry Groves,1F,Toilet,5.0,8.42,42.1
+Saiven Mulberry Groves,1F,Bedroom,10.33,16.0,165.28
+Saiven Mulberry Groves,1F,Family,15.0,11.0,165.0
+Saiven Mulberry Groves,1F,Balcony,15.0,3.75,56.25
+Saiven Mulberry Groves,1F,Balcony,10.33,3.75,38.7375
+Saiven Mulberry Groves,2F,Bedroom,15.0,11.0,165.0
+Saiven Mulberry Groves,2F,Walk-in,5.0,11.0,55.0
+Saiven Mulberry Groves,2F,Toilet,5.0,11.0,55.0
+Saiven Mulberry Groves,2F,Study,11.0,6.0,66.0
+Saiven Mulberry Groves,2F,Terrace,26.0,0.92,23.92
+NCC Urban Green Province,GF,Parents/Guest Bedroom,12.25,13.33,163.2925
+NCC Urban Green Province,GF,Toilet,7.67,5.75,44.1025
+NCC Urban Green Province,GF,Utility,6.25,14.5,90.625
+NCC Urban Green Province,GF,Kitchen,12.25,15.17,185.8325
+NCC Urban Green Province,GF,Deck,18.0,4.17,75.06
+NCC Urban Green Province,GF,Living/Dining,14.17,21.25,301.1125
+NCC Urban Green Province,GF,Drawing Room,14.17,13.75,194.8375
+NCC Urban Green Province,1F,Master Bedroom,18.0,13.33,239.94
+NCC Urban Green Province,1F,Toilet 1,8.42,8.0,67.36
+NCC Urban Green Province,1F,Dress 1,8.42,4.75,39.995
+NCC Urban Green Province,1F,Children Bedroom,15.17,15.17,230.1289
+NCC Urban Green Province,1F,Toilet 2,8.67,5.75,49.8525
+NCC Urban Green Province,1F,Dress 2,5.75,7.25,41.6875
+NCC Urban Green Province,1F,Family Room,11.25,21.75,244.6875
+NCC Urban Green Province,1F,Balcony,11.33,7.42,84.0686
+NCC Urban Green Province,2F,Theatre/Gym,20.5,13.33,273.265
+NCC Urban Green Province,2F,Toilet,5.75,13.33,76.6475
+NCC Urban Green Province,2F,Lobby,14.58,7.25,105.705
