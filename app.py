@@ -35,7 +35,7 @@ image_path = image_map.get(project)
 if image_path:
     try:
         image = Image.open(image_path)
-        st.image(image, caption=f"{project} - Ground Floor", use_column_width=True)
+        st.image(image, caption=f"{project} - Ground Floor", use_container_width=True)
     except FileNotFoundError:
         st.warning("Image not found. Make sure it exists in the 'images' folder.")
 
