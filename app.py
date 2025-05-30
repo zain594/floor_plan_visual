@@ -7,7 +7,7 @@ st.set_page_config(layout="wide")
 
 @st.cache_data
 def load_data():
-    return pd.read_csv("room_layout_coordinates.csv")  # CSV with Project, Floor, Room, x0, y0, x1, y1
+    return pd.read_csv("room_layout_with_dimensions.csv")  # CSV with Project, Floor, Room, x0, y0, x1, y1
 
 df = load_data()
 
