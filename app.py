@@ -5,7 +5,8 @@ import pandas as pd
 # Load your data
 @st.cache_data
 def load_data():
-    return pd.read_csv("floor_data.csv")
+    return pd.read_csv("floor_plan_comparison.csv")
+
 
 df = load_data()
 
