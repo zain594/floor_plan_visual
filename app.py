@@ -14,18 +14,18 @@ df = load_data()
 # Sidebar
 st.sidebar.title("🏘️ Floor Plan Comparison Tool")
 
-projects = sorted(df["Project"].unique())
+projects = sorted(df["project"].unique())
 floors = sorted(df["Floor"].unique())
 rooms = ["All"] + sorted(df["Room"].unique())
 
-project_a = st.sidebar.selectbox("Select Project A", projects)
-project_b = st.sidebar.selectbox("Select Project B", projects, index=1 if len(projects) > 1 else 0)
+project_a = st.sidebar.selectbox("Select project A", projects)
+project_b = st.sidebar.selectbox("Select project B", projects, index=1 if len(projects) > 1 else 0)
 floor = st.sidebar.selectbox("Select Floor", floors)
 selected_room = st.sidebar.selectbox("Highlight Room", rooms)
 
 # Filter data
-df_a = df[(df["Project"] == project_a) & (df["Floor"] == floor)]
-df_b = df[(df["Project"] == project_b) & (df["Floor"] == floor)]
+df_a = df[(df["project"] == project_a) & (df["Floor"] == floor)]
+df_b = df[(df["project"] == project_b) & (df["Floor"] == floor)]
 
 def plot_project(df_project, project_name):
     fig = go.Figure()
