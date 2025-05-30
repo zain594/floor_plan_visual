@@ -1,58 +1,36 @@
 import streamlit as st
-import plotly.graph_objects as go
 import pandas as pd
+import plotly.graph_objects as go
 import os
 
-# Load CSV data
+st.set_page_config(layout="wide")
+
 @st.cache_data
 def load_data():
-    return pd.read_csv("floor_plan_comparison.csv")
+    return pd.read_csv("room_layout_coordinates.csv")  # CSV with Project, Floor, Room, x0, y0, x1, y1
 
 df = load_data()
 
-# Sidebar selectors
-floor = st.selectbox("Select Floor", sorted(df["Floor"].unique()))
+# Sidebar
+st.sidebar.title("🏘️ Floor Plan Comparison Tool")
 
-col1, col2 = st.columns(2)
-with col1:
-    project_a = st.selectbox("Project A", sorted(df["Project"].unique()), key="proj_a")
-with col2:
-    project_b = st.selectbox("Project B", sorted(df["Project"].unique()), key="proj_b")
+projects = sorted(df["Project"].unique())
+floors = sorted(df["Floor"].unique())
+rooms = ["All"] + sorted(df["Room"].unique())
 
-# Filter data by floor and project
+project_a = st.sidebar.selectbox("Select Project A", projects)
+project_b = st.sidebar.selectbox("Select Project B", projects, index=1 if len(projects) > 1 else 0)
+floor = st.sidebar.selectbox("Select Floor", floors)
+selected_room = st.sidebar.selectbox("Highlight Room", rooms)
+
+# Filter data
 df_a = df[(df["Project"] == project_a) & (df["Floor"] == floor)]
 df_b = df[(df["Project"] == project_b) & (df["Floor"] == floor)]
 
-# Room selector
-common_rooms = sorted(set(df_a["Room"]).intersection(set(df_b["Room"])))
-selected_room = st.selectbox("Highlight Room (if exists in both)", ["All"] + common_rooms)
-
-# Coordinate generator
-def add_coordinates(df_subset):
-    df_subset = df_subset.copy()
-    current_y = 0
-    x_origin = 0
-    for i, row in df_subset.iterrows():
-        try:
-            length = float(row["Length (ft)"])
-            breadth = float(row["Breadth (ft)"])
-        except:
-            continue
-        df_subset.at[i, "x0"] = x_origin
-        df_subset.at[i, "x1"] = x_origin + breadth
-        df_subset.at[i, "y0"] = current_y
-        df_subset.at[i, "y1"] = current_y + length
-        current_y += length + 2  # spacing
-    return df_subset
-
-# Add coordinates
-df_a = add_coordinates(df_a)
-df_b = add_coordinates(df_b)
-
-# Plotting function
 def plot_project(df_project, project_name):
     fig = go.Figure()
     for _, row in df_project.iterrows():
+        # Highlight selected room or show default color
         color = "#ff6961" if selected_room != "All" and row["Room"] == selected_room else "lightblue"
         fig.add_shape(
             type="rect",
@@ -64,33 +42,46 @@ def plot_project(df_project, project_name):
             y=(row["y0"] + row["y1"]) / 2,
             text=row["Room"],
             showarrow=False,
-            font=dict(size=10)
+            font=dict(size=10),
+            align="center"
         )
     fig.update_layout(
         title=f"{project_name} - {floor}",
         xaxis=dict(visible=False),
         yaxis=dict(visible=False, scaleanchor="x", scaleratio=1),
-        height=400,
+        height=500,
         margin=dict(l=10, r=10, t=40, b=10)
     )
     return fig
 
-# Show visuals
+# Layout columns for comparison
 col1, col2 = st.columns(2)
+
 with col1:
-    st.plotly_chart(plot_project(df_a, project_a), use_container_width=True)
-    image_path_a = f"images/{project_a.replace(' ', '_')}_{floor}.jpg"
-    if os.path.exists(image_path_a):
-        st.image(image_path_a, caption=f"{project_a} - {floor}", use_container_width=True)
+    if df_a.empty:
+        st.warning(f"No data for {project_a} on floor {floor}")
     else:
-        st.warning(f"No image found for {project_a} - {floor}")
+        st.plotly_chart(plot_project(df_a, project_a), use_container_width=True)
+        # Show image if exists
+        image_path_a = f"images/{project_a.replace(' ', '_')}_{floor}.jpg"
+        if os.path.exists(image_path_a):
+            st.image(image_path_a, caption=f"{project_a} - {floor}", use_container_width=True)
+        else:
+            st.info(f"No image found for {project_a} - {floor}")
 
 with col2:
-    st.plotly_chart(plot_project(df_b, project_b), use_container_width=True)
-    image_path_b = f"images/{project_b.replace(' ', '_')}_{floor}.jpg"
-    if os.path.exists(image_path_b):
-        st.image(image_path_b, caption=f"{project_b} - {floor}", use_container_width=True)
+    if df_b.empty:
+        st.warning(f"No data for {project_b} on floor {floor}")
     else:
-        st.warning(f"No image found for {project_b} - {floor}")
+        st.plotly_chart(plot_project(df_b, project_b), use_container_width=True)
+        image_path_b = f"images/{project_b.replace(' ', '_')}_{floor}.jpg"
+        if os.path.exists(image_path_b):
+            st.image(image_path_b, caption=f"{project_b} - {floor}", use_container_width=True)
+        else:
+            st.info(f"No image found for {project_b} - {floor}")
 
-
+st.markdown("""
+---
+Built with ❤️ to compare residential projects room-by-room visually.  
+Ensure your CSV includes columns: `Project`, `Floor`, `Room`, `x0`, `y0`, `x1`, `y1`.
+""")
