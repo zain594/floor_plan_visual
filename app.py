@@ -15,23 +15,23 @@ df = load_data()
 st.sidebar.title("🏘️ Floor Plan Comparison Tool")
 
 projects = sorted(df["project"].unique())
-floors = sorted(df["Floor"].unique())
-rooms = ["All"] + sorted(df["Room"].unique())
+floors = sorted(df["floor"].unique())
+rooms = ["All"] + sorted(df["room"].unique())
 
 project_a = st.sidebar.selectbox("Select project A", projects)
 project_b = st.sidebar.selectbox("Select project B", projects, index=1 if len(projects) > 1 else 0)
-floor = st.sidebar.selectbox("Select Floor", floors)
-selected_room = st.sidebar.selectbox("Highlight Room", rooms)
+floor = st.sidebar.selectbox("Select floor", floors)
+selected_room = st.sidebar.selectbox("Highlight room", rooms)
 
 # Filter data
-df_a = df[(df["project"] == project_a) & (df["Floor"] == floor)]
-df_b = df[(df["project"] == project_b) & (df["Floor"] == floor)]
+df_a = df[(df["project"] == project_a) & (df["floor"] == floor)]
+df_b = df[(df["project"] == project_b) & (df["floor"] == floor)]
 
 def plot_project(df_project, project_name):
     fig = go.Figure()
     for _, row in df_project.iterrows():
         # Highlight selected room or show default color
-        color = "#ff6961" if selected_room != "All" and row["Room"] == selected_room else "lightblue"
+        color = "#ff6961" if selected_room != "All" and row["room"] == selected_room else "lightblue"
         fig.add_shape(
             type="rect",
             x0=row["x0"], x1=row["x1"], y0=row["y0"], y1=row["y1"],
@@ -40,7 +40,7 @@ def plot_project(df_project, project_name):
         fig.add_annotation(
             x=(row["x0"] + row["x1"]) / 2,
             y=(row["y0"] + row["y1"]) / 2,
-            text=row["Room"],
+            text=row["room"],
             showarrow=False,
             font=dict(size=10),
             align="center"
