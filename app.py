@@ -76,7 +76,10 @@ floors = sorted(df["floor"].unique())
 
 project_a = st.sidebar.selectbox("Select project A", projects)
 project_b = st.sidebar.selectbox("Select project B", projects, index=1 if len(projects) > 1 else 0)
-selected_floors = st.sidebar.multiselect("Select floors to compare (stacked)", floors, default=floors)
+default_floor = "Ground Floor" if "Ground Floor" in floors else floors[0]
+selected_floor = st.sidebar.selectbox("Select floor to compare", floors, index=floors.index(default_floor))
+selected_floors = [selected_floor]  # Keep interface consistent
+
 
 def map_room_group(room_raw):
     if not isinstance(room_raw, str):
