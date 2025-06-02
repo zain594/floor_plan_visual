@@ -121,8 +121,8 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
 
             fig.add_trace(
                 go.Scatter(
-                    x=[y0_scaled, y0_scaled, y1_scaled, y1_scaled, y0_scaled],
-                    y=[x0_scaled, x1_scaled, x1_scaled, x0_scaled, x0_scaled],
+                    x=[x0_scaled, x1_scaled, x1_scaled, x0_scaled, x0_scaled],
+                    y=[y0_scaled, y0_scaled, y1_scaled, y1_scaled, y0_scaled],
                     fill="toself",
                     fillcolor=room_color,
                     line=dict(color="black"),
@@ -136,8 +136,8 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
             )
             fig.add_trace(
                 go.Scatter(
-                    x=[(y0_scaled + y1_scaled) / 2],
-                    y=[(x0_scaled + x1_scaled) / 2],
+                    x=[(x0_scaled + x1_scaled) / 2],
+                    y=[(y0_scaled + y1_scaled) / 2],
                     mode="text",
                     text=[row["room"].title() if isinstance(row["room"], str) else "N/A"],
                     showlegend=False,
