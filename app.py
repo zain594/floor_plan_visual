@@ -215,10 +215,15 @@ st.altair_chart(bar_chart, use_container_width=True)
 st.subheader("Room Area Comparison")
 
 room_chart = alt.Chart(df_area_filtered).mark_bar().encode(
-    x=alt.X("Room:N", sort=None),
+    x=alt.X("Room:N", sort=None, title="Room"),
     y=alt.Y("Area (sqft):Q"),
-    color=alt.Color("Project:N"),
-    tooltip=["Project", "Floor", "Room", "Length (ft)", "Breadth (ft)", "Area (sqft)"]
-).properties(width=700, height=400).interactive()
+    color=alt.Color("Room:N"),
+    tooltip=["Project", "Floor", "Room", "Length (ft)", "Breadth (ft)", "Area (sqft)"],
+    column=alt.Column("Project:N", title=None)
+).properties(
+    width=300,
+    height=400
+).interactive()
 
 st.altair_chart(room_chart, use_container_width=True)
+
