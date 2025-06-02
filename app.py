@@ -225,4 +225,4 @@ room_chart = alt.Chart(df_area_filtered).mark_bar().encode(
     width=200,   # reduced from 300
     height=400
 ).interactive()
-
+st.altair_chart(room_chart, use_container_width=True)
