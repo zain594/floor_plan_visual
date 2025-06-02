@@ -162,67 +162,53 @@ st.plotly_chart(fig, use_container_width=True)
 col1, col2 = st.columns(2)
 
 with col1:
-    image_path_a = f"images/{project_a.replace(' ', '_')}_{selected_floors[0]}.jpg" if selected_floors else None
-    if image_path_a and os.path.exists(image_path_a):
-        st.image(image_path_a, caption=f"{project_a} - {selected_floors[0]}", use_container_width=True)
+    if selected_floors:
+        image_path_a = f"images/{project_a.replace(' ', '_')}_{selected_floors[0]}.jpg"
+        if os.path.exists(image_path_a):
+            st.image(image_path_a, caption=f"{project_a} - {selected_floors[0]}", use_container_width=True)
+        else:
+            st.info(f"No image found for {project_a} - {selected_floors[0]}")
     else:
-        st.info(f"No image found for {project_a} - {selected_floors[0]}")
+        st.info("Select at least one floor to see floor plan image for Project A.")
 
 with col2:
-    image_path_b = f"images/{project_b.replace(' ', '_')}_{selected_floors[0]}.jpg" if selected_floors else None
-    if image_path_b and os.path.exists(image_path_b):
-        st.image(image_path_b, caption=f"{project_b} - {selected_floors[0]}", use_container_width=True)
+    if selected_floors:
+        image_path_b = f"images/{project_b.replace(' ', '_')}_{selected_floors[0]}.jpg"
+        if os.path.exists(image_path_b):
+            st.image(image_path_b, caption=f"{project_b} - {selected_floors[0]}", use_container_width=True)
+        else:
+            st.info(f"No image found for {project_b} - {selected_floors[0]}")
     else:
-        st.info(f"No image found for {project_b} - {selected_floors[0]}")
+        st.info("Select at least one floor to see floor plan image for Project B.")
 
-# === Altair Charts ===
+# ==== ALTair bar charts ====
 
-st.markdown("---")
-st.header("🏠 Built-up Area Summary")
+st.subheader("Total Built-up Area by Project")
 
-# Prepare area summary for Altair
-df_area_summary = (
-    df_area.groupby("Project")["Area (sqft)"]
-    .sum()
-    .reset_index()
-    .sort_values("Area (sqft)", ascending=False)
-)
-
-bar_area = (
-    alt.Chart(df_area_summary)
-    .mark_bar()
-    .encode(
-        x=alt.X("Project", sort="-y"),
-        y=alt.Y("Area (sqft)", title="Total Built-up Area (sqft)"),
-        tooltip=["Project", "Area (sqft)"],
-        color=alt.Color("Project", legend=None),
-    )
-    .properties(width=600, height=300)
-)
-
-st.altair_chart(bar_area, use_container_width=True)
-
-st.header("📊 Room Area Comparison by Floor and Project")
-
-room_area_filtered = df_area[
-    (df_area["Project"].isin([project_a, project_b]))
-    & (df_area["Floor"].isin(selected_floors))
-    & (df_area["Area (sqft)"] > 0)
+# Filter area data for selected projects and floors only
+df_area_filtered = df_area[
+    (df_area["Project"].isin([project_a, project_b])) &
+    (df_area["Floor"].isin(selected_floors))
 ]
 
-bar_room = (
-    alt.Chart(room_area_filtered)
-    .mark_bar()
-    .encode(
-        x=alt.X("Room", sort=None, title="Room"),
-        y=alt.Y("Area (sqft)", title="Area (sqft)"),
-        color=alt.Color("Project"),
-        column=alt.Column("Floor", header=alt.Header(title="Floor")),
-        tooltip=["Project", "Floor", "Room", "Area (sqft)"],
-    )
-    .properties(width=150, height=300)
-    .interactive()
-)
+total_area = df_area_filtered.groupby("Project")["Area (sqft)"].sum().reset_index()
 
-st.altair_chart(bar_room, use_container_width=True)
+bar_chart = alt.Chart(total_area).mark_bar().encode(
+    x=alt.X("Project:N", sort="-y"),
+    y="Area (sqft):Q",
+    tooltip=["Project", "Area (sqft)"],
+    color="Project:N"
+).properties(width=700, height=400)
 
+st.altair_chart(bar_chart, use_container_width=True)
+
+st.subheader("Room Area Comparison")
+
+room_chart = alt.Chart(df_area_filtered).mark_bar().encode(
+    x=alt.X("Room:N", sort=None),
+    y=alt.Y("Area (sqft):Q"),
+    color=alt.Color("Project:N"),
+    tooltip=["Project", "Floor", "Room", "Length (ft)", "Breadth (ft)", "Area (sqft)"]
+).properties(width=700, height=400).interactive()
+
+st.altair_chart(room_chart, use_container_width=True)
