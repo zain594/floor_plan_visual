@@ -221,9 +221,8 @@ room_chart = alt.Chart(df_area_filtered).mark_bar().encode(
     tooltip=["Project", "Floor", "Room", "Length (ft)", "Breadth (ft)", "Area (sqft)"],
     column=alt.Column("Project:N", title=None)
 ).properties(
-    width=300,
+    width=200,   # reduced from 300
     height=400
 ).interactive()
 
-st.altair_chart(room_chart, use_container_width=True)
 
