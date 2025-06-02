@@ -64,12 +64,24 @@ st.sidebar.title("🏘️ Floor Plan Comparison Tool")
 
 projects = sorted(df["project"].unique())
 floors = sorted(df["floor"].unique())
-rooms = ["All"] + sorted(df["room"].unique())
 
 project_a = st.sidebar.selectbox("Select project A", projects)
 project_b = st.sidebar.selectbox("Select project B", projects, index=1 if len(projects) > 1 else 0)
 selected_floors = st.sidebar.multiselect("Select floors to compare (stacked)", floors, default=floors)
-highlight_room = st.sidebar.selectbox("Highlight room", rooms)
+
+# --- Dynamically filter highlight rooms based on projects and floors ---
+filtered_rooms_df = df[
+    (df["project"].isin([project_a, project_b])) &
+    (df["floor"].isin(selected_floors))
+]
+
+available_rooms = sorted(
+    r for r in filtered_rooms_df["room"].dropna().unique()
+    if str(r).strip() != ""
+)
+
+highlight_room = st.sidebar.selectbox("Highlight room", ["All"] + available_rooms)
+# ---------------------------------------------------------------------
 
 df["Room Grouped"] = df["room"].str.strip().map(rename_map).fillna("Other")
 
@@ -179,7 +191,7 @@ with col2:
     else:
         st.info(f"No image found for {project_b} - {selected_floors[0]}")
 
-# ==== ADD ALTair bar charts here ====
+# ==== ALTair bar charts ====
 
 st.subheader("Total Built-up Area by Project")
 
@@ -210,5 +222,3 @@ room_chart = alt.Chart(df_area_filtered).mark_bar().encode(
 ).properties(width=700, height=400).interactive()
 
 st.altair_chart(room_chart, use_container_width=True)
-
-
