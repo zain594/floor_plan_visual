@@ -44,68 +44,47 @@ df = pd.merge(
     how="left"
 )
 
+# Updated rename_map matching exact raw room names from your data
 rename_map = {
-    "living": "Living", "kitchen": "Kitchen", "utility": "Utility", "parking": "Parking",
-    "guest bedroom1": "Guest Bedroom", "attd.toilet 1": "Toilet", "dress 1": "Dress",
-    "master bedroom 2": "Master Bedroom", "attd.toilet 2": "Toilet", "dress 2": "Dress",
-    "balcony": "Balcony", "children bedroom 3": "Children Bedroom", "dress 3": "Dress",
-    "attd.toilet 3": "Toilet", "family room": "Family Room", "sit out": "Sit Out",
-    "master bedroom 4": "Master Bedroom", "attd.toilet 4": "Toilet",
-    "wash area & c.toilet": "Wash Area & Toilet", "bar counter": "Bar Counter", "terrace": "Terrace"
-}
-
-color_map = {
-    "Living": "#a6cee3", "Kitchen": "#1f78b4", "Utility": "#b2df8a", "Parking": "#33a02c",
-    "Guest Bedroom": "#fb9a99", "Toilet": "#e31a1c", "Dress": "#fdbf6f", "Master Bedroom": "#ff7f00",
-    "Balcony": "#cab2d6", "Children Bedroom": "#6a3d9a", "Family Room": "#ffff99", "Sit Out": "#b15928",
-    "Wash Area & Toilet": "#8dd3c7", "Bar Counter": "#ffffb3", "Terrace": "#bebada", "Other": "#cccccc"
+    "attd. toilet 1": "Toilet",
+    "bedroom 1": "Bedroom",
+    "deck": "Deck",
+    "drawing room": "Drawing Room",
+    "dress 1": "Dress",
+    "kitchen": "Kitchen",
+    "living": "Living",
+    "living/dining": "Living/Dining",
+    "parents/guest bedroom": "Guest Bedroom",
+    "parking": "Parking",
+    "toilet": "Toilet",
+    "utility": "Utility",
 }
 
 def get_color(room_group):
+    color_map = {
+        "Living": "#a6cee3", "Kitchen": "#1f78b4", "Utility": "#b2df8a", "Parking": "#33a02c",
+        "Guest Bedroom": "#fb9a99", "Toilet": "#e31a1c", "Dress": "#fdbf6f", "Bedroom": "#ff7f00",
+        "Balcony": "#cab2d6", "Children Bedroom": "#6a3d9a", "Family Room": "#ffff99", "Sit Out": "#b15928",
+        "Wash Area & Toilet": "#8dd3c7", "Bar Counter": "#ffffb3", "Terrace": "#bebada", "Other": "#cccccc",
+        "Deck": "#a1dab4", "Drawing Room": "#41b6c4", "Living/Dining": "#2c7fb8",
+    }
     return color_map.get(room_group, color_map["Other"])
 
-st.sidebar.title("🏘️ Floor Plan Comparison Tool")
-
-projects = sorted(df["project"].unique())
-floors = sorted(df["floor"].unique())
-
-# Select projects and floors (already lowercase normalized)
-project_a = st.sidebar.selectbox("Select project A", projects)
-project_b = st.sidebar.selectbox("Select project B", projects, index=1 if len(projects) > 1 else 0)
-selected_floors = st.sidebar.multiselect("Select floors to compare (stacked)", floors, default=floors)
-
-# Filter rooms by selected projects and floors
-filtered_rooms_df = df[
-    (df["project"].isin([project_a, project_b])) &
-    (df["floor"].isin(selected_floors))
-]
-
-available_rooms = sorted(
-    r for r in filtered_rooms_df["room"].dropna().unique()
-    if str(r).strip() != ""
-)
-
-# Debug print to check available rooms for highlight
-st.sidebar.write("Available rooms for highlight:", available_rooms)
-
-highlight_room = st.sidebar.selectbox("Highlight room", ["All"] + available_rooms)
-
-# Create "Room Grouped" column for coloring
-df["Room Grouped"] = df["room"].map(rename_map).fillna("Other")
-
-scale = 1.5
-vertical_gap = 50
-
+# When adding room traces, use this for color and highlight logic:
 def add_room_traces(fig, df_proj, col, floors_to_show):
     floor_to_offset = {f: idx * vertical_gap for idx, f in enumerate(floors_to_show)}
     for floor in floors_to_show:
         df_floor = df_proj[df_proj["floor"] == floor]
         y_offset = floor_to_offset[floor]
         for idx, row in df_floor.iterrows():
-            room_color = get_color(row["Room Grouped"])
-            # Highlight only if highlight_room matches exactly (case-insensitive)
-            if highlight_room != "All" and row["room"] == highlight_room:
+            room_raw = row["room"].strip().lower()
+            room_group = rename_map.get(room_raw, "Other")
+            
+            # Highlight condition (case-insensitive)
+            if highlight_room != "All" and room_raw == highlight_room.strip().lower():
                 room_color = "red"
+            else:
+                room_color = get_color(room_group)
 
             x0_scaled = row["x0"] * scale
             x1_scaled = row["x1"] * scale
@@ -132,13 +111,26 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
                     fillcolor=room_color,
                     line=dict(color="black"),
                     mode="lines",
-                    name=row["Room Grouped"],
+                    name=room_group,
                     showlegend=False,
                     hoverinfo="text",
                     text=text,
                 ),
                 row=1, col=col
             )
+            fig.add_trace(
+                go.Scatter(
+                    x=[(x0_scaled + x1_scaled) / 2],
+                    y=[(y0_scaled + y1_scaled) / 2],
+                    mode="text",
+                    text=[row["room"].title()],
+                    showlegend=False,
+                    hoverinfo="skip",
+                    textfont=dict(color="black", size=10),
+                ),
+                row=1, col=col
+            )
+
             fig.add_trace(
                 go.Scatter(
                     x=[(x0_scaled + x1_scaled) / 2],
