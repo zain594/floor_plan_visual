@@ -69,7 +69,7 @@ color_map = {
 def get_color(room_group):
     return color_map.get(room_group, color_map["Other"])
 
-st.sidebar.title("🏘️ Floor Plan Comparison Tool")
+st.sidebar.title("Floor Plan Comparison Tool")
 
 projects = sorted(df["project"].unique())
 floors = sorted(df["floor"].unique())
