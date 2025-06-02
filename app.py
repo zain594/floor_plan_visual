@@ -211,4 +211,4 @@ room_chart = alt.Chart(df_area_filtered).mark_bar().encode(
 
 st.altair_chart(room_chart, use_container_width=True)
 
-st.markdown("""
+
