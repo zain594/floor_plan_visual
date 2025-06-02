@@ -27,103 +27,39 @@ def load_area_data():
 df_layout = load_layout_data()
 df_area = load_area_data()
 
-# Clean strings for merging
+# Clean strings for merging (lowercase keys for consistent matching)
 for col in ["project", "floor", "room"]:
-    df_layout[col] = df_layout[col].astype(str).str.strip()
+    df_layout[col] = df_layout[col].astype(str).str.strip().str.lower()
 
-# Normalize case to lowercase for merging and matching
-df_layout["room_lc"] = df_layout["room"].str.lower().str.strip()
-df_area["room_lc"] = df_area["Room"].str.lower().str.strip()
-df_layout["project_lc"] = df_layout["project"].str.lower().str.strip()
-df_area["project_lc"] = df_area["Project"].str.lower().str.strip()
-df_layout["floor_lc"] = df_layout["floor"].str.lower().str.strip()
-df_area["floor_lc"] = df_area["Floor"].str.lower().str.strip()
+df_area["Project"] = df_area["Project"].str.lower().str.strip()
+df_area["Floor"] = df_area["Floor"].str.lower().str.strip()
+df_area["Room"] = df_area["Room"].str.lower().str.strip()
 
-# Merge layout and area data on lowercase keys
+# Merge layout and area data
 df = pd.merge(
     df_layout,
     df_area,
-    left_on=["project_lc", "floor_lc", "room_lc"],
-    right_on=["project_lc", "floor_lc", "room_lc"],
-    how="left",
-    suffixes=('_layout', '_area')
+    left_on=["project", "floor", "room"],
+    right_on=["Project", "Floor", "Room"],
+    how="left"
 )
 
-# Rename map to group similar rooms under consistent names
 rename_map = {
-    "attd. toilet 1": "Toilet",
-    "attd. toilet 2": "Toilet",
-    "attd. toilet 3": "Toilet",
-    "attd. toilet 4": "Toilet",
-    "toilet 1": "Toilet",
-    "toilet 2": "Toilet",
-    "toilet 3": "Toilet",
-    "toilet": "Toilet",
-    "bedroom 1": "Bedroom",
-    "bedroom 2": "Bedroom",
-    "bedroom 3": "Bedroom",
-    "bedroom 4": "Bedroom",
-    "parents/guest bedroom": "Guest Bedroom",
-    "guest bedroom": "Guest Bedroom",
-    "family room": "Family Room",
-    "drawing room": "Drawing Room",
-    "living": "Living",
-    "living room": "Living",
-    "living/dining": "Living/Dining",
-    "kitchen": "Kitchen",
-    "utility": "Utility",
-    "parking": "Parking",
-    "dress 1": "Dress",
-    "dress 2": "Dress",
-    "dress 3": "Dress",
-    "balcony": "Balcony",
-    "bar counter": "Bar Counter",
-    "deck": "Deck",
-    "terrace": "Terrace",
-    "sit out": "Sit Out",
-    "study": "Study",
-    "garden 1": "Garden",
-    "garden 2": "Garden",
-    "pooja": "Pooja",
-    "walk-in": "Walk-In",
-    "theatre/gym": "Theatre/Gym",
-    "lobby": "Lobby",
-    "wash area & c.toilet": "Wash Area & Toilet",
-    "powder": "Toilet",
-    "family": "Family Room",
-    "dining": "Dining",
-    # Add more mappings if needed
+    "living": "Living", "kitchen": "Kitchen", "utility": "Utility", "parking": "Parking",
+    "guest bedroom1": "Guest Bedroom", "attd. toilet 1": "Toilet", "dress 1": "Dress",
+    "master bedroom 2": "Master Bedroom", "attd. toilet 2": "Toilet", "dress 2": "Dress",
+    "balcony": "Balcony", "children bedroom 3": "Children Bedroom", "dress 3": "Dress",
+    "attd. toilet 3": "Toilet", "family room": "Family Room", "sit out": "Sit Out",
+    "master bedroom 4": "Master Bedroom", "attd. toilet 4": "Toilet",
+    "wash area & c.toilet": "Wash Area & Toilet", "bar counter": "Bar Counter", "terrace": "Terrace",
+    # Add more mappings as needed from your data
 }
 
-# Apply rename map to create a "Room Grouped" column
-df["Room Grouped"] = df["room_lc"].map(rename_map).fillna("Other")
-
 color_map = {
-    "Toilet": "#e31a1c",
-    "Bedroom": "#fb9a99",
-    "Guest Bedroom": "#fdbf6f",
-    "Family Room": "#ffff99",
-    "Drawing Room": "#cab2d6",
-    "Living": "#a6cee3",
-    "Living/Dining": "#1f78b4",
-    "Kitchen": "#b2df8a",
-    "Utility": "#33a02c",
-    "Parking": "#8dd3c7",
-    "Dress": "#fbb4ae",
-    "Balcony": "#bebada",
-    "Bar Counter": "#ffffb3",
-    "Deck": "#b15928",
-    "Terrace": "#fb8072",
-    "Sit Out": "#80b1d3",
-    "Study": "#fccde5",
-    "Garden": "#ccebc5",
-    "Pooja": "#d9d9d9",
-    "Walk-In": "#fdb462",
-    "Theatre/Gym": "#bc80bd",
-    "Lobby": "#ffffcc",
-    "Wash Area & Toilet": "#8dd3c7",
-    "Dining": "#fb9a99",
-    "Other": "#cccccc"
+    "Living": "#a6cee3", "Kitchen": "#1f78b4", "Utility": "#b2df8a", "Parking": "#33a02c",
+    "Guest Bedroom": "#fb9a99", "Toilet": "#e31a1c", "Dress": "#fdbf6f", "Master Bedroom": "#ff7f00",
+    "Balcony": "#cab2d6", "Children Bedroom": "#6a3d9a", "Family Room": "#ffff99", "Sit Out": "#b15928",
+    "Wash Area & Toilet": "#8dd3c7", "Bar Counter": "#ffffb3", "Terrace": "#bebada", "Other": "#cccccc"
 }
 
 def get_color(room_group):
@@ -137,6 +73,8 @@ floors = sorted(df["floor"].unique())
 project_a = st.sidebar.selectbox("Select project A", projects)
 project_b = st.sidebar.selectbox("Select project B", projects, index=1 if len(projects) > 1 else 0)
 selected_floors = st.sidebar.multiselect("Select floors to compare (stacked)", floors, default=floors)
+
+df["Room Grouped"] = df["room"].map(rename_map).fillna("Other")
 
 scale = 1.5
 vertical_gap = 50
@@ -158,14 +96,9 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
             breadth = row.get("Breadth (ft)", "N/A")
             area = row.get("Area (sqft)", "N/A")
 
-            # Fix for NaNs to show N/A
-            length = length if pd.notna(length) else "N/A"
-            breadth = breadth if pd.notna(breadth) else "N/A"
-            area = area if pd.notna(area) else "N/A"
-
             text = (
-                f"Room: {row['room']}<br>"
-                f"Floor: {floor}<br>"
+                f"Room: {row['room'].title()}<br>"
+                f"Floor: {floor.upper()}<br>"
                 f"Length: {length} ft<br>"
                 f"Breadth: {breadth} ft<br>"
                 f"Area: {area} sqft"
@@ -191,7 +124,7 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
                     x=[(x0_scaled + x1_scaled) / 2],
                     y=[(y0_scaled + y1_scaled) / 2],
                     mode="text",
-                    text=[row["room"]],
+                    text=[row["room"].title()],
                     showlegend=False,
                     hoverinfo="skip",
                     textfont=dict(color="black", size=10),
@@ -202,71 +135,84 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
 df_a = df[df["project"] == project_a]
 df_b = df[df["project"] == project_b]
 
-fig = make_subplots(rows=1, cols=2, subplot_titles=[project_a, project_b], horizontal_spacing=0.1)
+fig = make_subplots(rows=1, cols=2, subplot_titles=[project_a.title(), project_b.title()], horizontal_spacing=0.1)
 
 add_room_traces(fig, df_a, col=1, floors_to_show=selected_floors)
 add_room_traces(fig, df_b, col=2, floors_to_show=selected_floors)
 
 max_x = max(
     (df_a["x1"] * scale).max() if not df_a.empty else 100,
-    (df_b["x1"] * scale).max() if not df_b.empty else 100,
-) * 1.05
+    (df_b["x1"] * scale).max() if not df_b.empty else 100
+) + 10
 
-max_y = vertical_gap * len(selected_floors) * scale * 1.05
+max_y = max(
+    ((df_a["y1"] + vertical_gap * (len(selected_floors) - 1)) * scale).max() if not df_a.empty else 100,
+    ((df_b["y1"] + vertical_gap * (len(selected_floors) - 1)) * scale).max() if not df_b.empty else 100
+) + 10
+
+for i in [1, 2]:
+    fig.update_xaxes(visible=False, scaleanchor=f"y{i}", scaleratio=1, row=1, col=i, range=[-10, max_x])
+    fig.update_yaxes(visible=False, autorange="reversed", row=1, col=i, range=[-10, max_y])
 
 fig.update_layout(
-    height=700,
-    width=1200,
-    title_text=f"Floor Plan Comparison: {project_a} vs {project_b}",
+    height=800,
+    margin=dict(l=10, r=10, t=50, b=10),
     showlegend=False,
+    title_text=f"Floor Plans: {project_a.title()} vs {project_b.title()} (Floors: {', '.join(f.upper() for f in selected_floors)})",
 )
-
-fig.update_xaxes(range=[0, max_x], zeroline=False, showgrid=False, showticklabels=False)
-fig.update_yaxes(range=[0, max_y], scaleanchor="x", scaleratio=1, zeroline=False, showgrid=False, showticklabels=False)
 
 st.plotly_chart(fig, use_container_width=True)
 
-# Summary data for area bar charts
+# Show floor plan images side by side if available (for first selected floor)
+col1, col2 = st.columns(2)
 
-# Compute total built-up area per project
-df_total_area = df_area.groupby("Project")["Area (sqft)"].sum().reset_index()
+with col1:
+    image_path_a = None
+    if selected_floors:
+        image_path_a = f"images/{project_a.replace(' ', '_')}_{selected_floors[0]}.jpg"
+    if image_path_a and os.path.exists(image_path_a):
+        st.image(image_path_a, caption=f"{project_a.title()} - {selected_floors[0].upper()}", use_container_width=True)
+    else:
+        st.info(f"No image found for {project_a.title()} - {selected_floors[0].upper()}" if selected_floors else "No floor selected")
 
-st.markdown("### Total Built-up Area by Project")
-bar_total = (
-    alt.Chart(df_total_area)
-    .mark_bar()
-    .encode(
-        x=alt.X("Project:N", sort="-y"),
-        y=alt.Y("Area (sqft):Q"),
-        color=alt.Color("Project:N"),
-        tooltip=["Project", alt.Tooltip("Area (sqft):Q", format=".2f")],
-    )
-    .properties(width=600, height=300)
-)
+with col2:
+    image_path_b = None
+    if selected_floors:
+        image_path_b = f"images/{project_b.replace(' ', '_')}_{selected_floors[0]}.jpg"
+    if image_path_b and os.path.exists(image_path_b):
+        st.image(image_path_b, caption=f"{project_b.title()} - {selected_floors[0].upper()}", use_container_width=True)
+    else:
+        st.info(f"No image found for {project_b.title()} - {selected_floors[0].upper()}" if selected_floors else "No floor selected")
 
-st.altair_chart(bar_total, use_container_width=True)
+# ==== ALTair bar charts ====
 
-# Compute area by project and room group for stacked comparison
-df_area_grouped = df.copy()
-df_area_grouped["Area (sqft)"] = pd.to_numeric(df_area_grouped["Area (sqft)"], errors="coerce").fillna(0)
-df_area_grouped_summary = (
-    df_area_grouped.groupby(["Project", "Room Grouped"])["Area (sqft)"]
-    .sum()
-    .reset_index()
-)
+st.subheader("Total Built-up Area by Project")
 
-st.markdown("### Built-up Area by Room Type and Project")
+# Filter area data for selected projects and floors only
+df_area_filtered = df_area[
+    (df_area["Project"].isin([project_a, project_b])) &
+    (df_area["Floor"].isin(selected_floors))
+]
 
-bar_room = (
-    alt.Chart(df_area_grouped_summary)
-    .mark_bar()
-    .encode(
-        x=alt.X("Project:N", sort="-y"),
-        y=alt.Y("Area (sqft):Q"),
-        color=alt.Color("Room Grouped:N", scale=alt.Scale(domain=list(color_map.keys()), range=list(color_map.values()))),
-        tooltip=["Project", "Room Grouped", alt.Tooltip("Area (sqft):Q", format=".2f")],
-    )
-    .properties(width=800, height=400)
-)
+total_area = df_area_filtered.groupby("Project")["Area (sqft)"].sum().reset_index()
 
-st.altair_chart(bar_room, use_container_width=True)
+bar_chart = alt.Chart(total_area).mark_bar().encode(
+    x=alt.X("Project:N", sort="-y"),
+    y="Area (sqft):Q",
+    tooltip=["Project", "Area (sqft)"],
+    color="Project:N"
+).properties(width=700, height=400)
+
+st.altair_chart(bar_chart, use_container_width=True)
+
+st.subheader("Room Area Comparison")
+
+room_chart = alt.Chart(df_area_filtered).mark_bar().encode(
+    x=alt.X("Room:N", sort=None),
+    y="Area (sqft):Q",
+    color="Project:N",
+    tooltip=["Project", "Floor", "Room", "Area (sqft)"],
+    column="Project:N"
+).properties(width=250, height=300)
+
+st.altair_chart(room_chart, use_container_width=True)
