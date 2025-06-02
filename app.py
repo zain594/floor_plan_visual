@@ -27,15 +27,11 @@ def load_area_data():
 df_layout = load_layout_data()
 df_area = load_area_data()
 
-# Normalize string columns in df_layout
+# Clean strings for merging
 for col in ["project", "floor", "room"]:
-    df_layout[col] = df_layout[col].astype(str).str.strip().str.lower()
+    df_layout[col] = df_layout[col].astype(str).str.strip()
 
-# Normalize string columns in df_area
-for col in ["Project", "Floor", "Room"]:
-    df_area[col] = df_area[col].astype(str).str.strip().str.lower()
-
-# Merge layout and area data on normalized keys
+# Merge layout and area data
 df = pd.merge(
     df_layout,
     df_area,
@@ -44,7 +40,7 @@ df = pd.merge(
     how="left"
 )
 
-# Updated rename_map matching exact raw room names from your data
+# Rename map matching your exact raw room names (lowercase keys)
 rename_map = {
     "attd. toilet 1": "Toilet",
     "bedroom 1": "Bedroom",
@@ -60,27 +56,74 @@ rename_map = {
     "utility": "Utility",
 }
 
+color_map = {
+    "Living": "#a6cee3",
+    "Kitchen": "#1f78b4",
+    "Utility": "#b2df8a",
+    "Parking": "#33a02c",
+    "Guest Bedroom": "#fb9a99",
+    "Toilet": "#e31a1c",
+    "Dress": "#fdbf6f",
+    "Bedroom": "#ff7f00",
+    "Deck": "#a1dab4",
+    "Drawing Room": "#41b6c4",
+    "Living/Dining": "#2c7fb8",
+    "Other": "#cccccc",
+}
+
 def get_color(room_group):
-    color_map = {
-        "Living": "#a6cee3", "Kitchen": "#1f78b4", "Utility": "#b2df8a", "Parking": "#33a02c",
-        "Guest Bedroom": "#fb9a99", "Toilet": "#e31a1c", "Dress": "#fdbf6f", "Bedroom": "#ff7f00",
-        "Balcony": "#cab2d6", "Children Bedroom": "#6a3d9a", "Family Room": "#ffff99", "Sit Out": "#b15928",
-        "Wash Area & Toilet": "#8dd3c7", "Bar Counter": "#ffffb3", "Terrace": "#bebada", "Other": "#cccccc",
-        "Deck": "#a1dab4", "Drawing Room": "#41b6c4", "Living/Dining": "#2c7fb8",
-    }
     return color_map.get(room_group, color_map["Other"])
 
-# When adding room traces, use this for color and highlight logic:
+# Sidebar inputs
+st.sidebar.title("🏘️ Floor Plan Comparison Tool")
+
+projects = sorted(df["project"].unique())
+floors = sorted(df["floor"].unique())
+
+project_a = st.sidebar.selectbox("Select project A", projects)
+project_b = st.sidebar.selectbox("Select project B", projects, index=1 if len(projects) > 1 else 0)
+selected_floors = st.sidebar.multiselect("Select floors to compare (stacked)", floors, default=floors)
+
+# Filter df for project_a and selected floors to get valid rooms for highlight
+valid_rooms_a = df[
+    (df["project"] == project_a) &
+    (df["floor"].isin(selected_floors))
+]["room"].unique()
+valid_rooms_a = sorted([r.strip() for r in valid_rooms_a if isinstance(r, str)])
+
+# Same for project_b
+valid_rooms_b = df[
+    (df["project"] == project_b) &
+    (df["floor"].isin(selected_floors))
+]["room"].unique()
+valid_rooms_b = sorted([r.strip() for r in valid_rooms_b if isinstance(r, str)])
+
+# Combine rooms from both projects, add 'All'
+highlight_room_options = ["All"] + sorted(set(valid_rooms_a + valid_rooms_b))
+
+highlight_room = st.sidebar.selectbox("Highlight room", highlight_room_options)
+
+# Add a column with renamed room group for color mapping
+def map_room_group(room_raw):
+    if not isinstance(room_raw, str):
+        return "Other"
+    return rename_map.get(room_raw.strip().lower(), "Other")
+
+df["Room Grouped"] = df["room"].apply(map_room_group)
+
+scale = 1.5
+vertical_gap = 50
+
 def add_room_traces(fig, df_proj, col, floors_to_show):
     floor_to_offset = {f: idx * vertical_gap for idx, f in enumerate(floors_to_show)}
     for floor in floors_to_show:
         df_floor = df_proj[df_proj["floor"] == floor]
         y_offset = floor_to_offset[floor]
         for idx, row in df_floor.iterrows():
-            room_raw = row["room"].strip().lower()
+            room_raw = row["room"].strip().lower() if isinstance(row["room"], str) else ""
             room_group = rename_map.get(room_raw, "Other")
             
-            # Highlight condition (case-insensitive)
+            # Highlight only if room matches exactly and highlight_room not "All"
             if highlight_room != "All" and room_raw == highlight_room.strip().lower():
                 room_color = "red"
             else:
@@ -96,7 +139,7 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
             area = row.get("Area (sqft)", "N/A")
 
             text = (
-                f"Room: {row['room'].title()}<br>"
+                f"Room: {row['room'].title() if isinstance(row['room'], str) else 'N/A'}<br>"
                 f"Floor: {floor}<br>"
                 f"Length: {length} ft<br>"
                 f"Breadth: {breadth} ft<br>"
@@ -123,20 +166,7 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
                     x=[(x0_scaled + x1_scaled) / 2],
                     y=[(y0_scaled + y1_scaled) / 2],
                     mode="text",
-                    text=[row["room"].title()],
-                    showlegend=False,
-                    hoverinfo="skip",
-                    textfont=dict(color="black", size=10),
-                ),
-                row=1, col=col
-            )
-
-            fig.add_trace(
-                go.Scatter(
-                    x=[(x0_scaled + x1_scaled) / 2],
-                    y=[(y0_scaled + y1_scaled) / 2],
-                    mode="text",
-                    text=[row["room"].title()],
+                    text=[row["room"].title() if isinstance(row["room"], str) else "N/A"],
                     showlegend=False,
                     hoverinfo="skip",
                     textfont=dict(color="black", size=10),
@@ -147,7 +177,7 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
 df_a = df[df["project"] == project_a]
 df_b = df[df["project"] == project_b]
 
-fig = make_subplots(rows=1, cols=2, subplot_titles=[project_a.title(), project_b.title()], horizontal_spacing=0.1)
+fig = make_subplots(rows=1, cols=2, subplot_titles=[project_a, project_b], horizontal_spacing=0.1)
 
 add_room_traces(fig, df_a, col=1, floors_to_show=selected_floors)
 add_room_traces(fig, df_b, col=2, floors_to_show=selected_floors)
@@ -170,7 +200,7 @@ fig.update_layout(
     height=800,
     margin=dict(l=10, r=10, t=50, b=10),
     showlegend=False,
-    title_text=f"Floor Plans: {project_a.title()} vs {project_b.title()} (Floors: {', '.join(selected_floors)})",
+    title_text=f"Floor Plans: {project_a} vs {project_b} (Floors: {', '.join(selected_floors)})",
 )
 
 st.plotly_chart(fig, use_container_width=True)
@@ -181,20 +211,22 @@ col1, col2 = st.columns(2)
 with col1:
     image_path_a = f"images/{project_a.replace(' ', '_')}_{selected_floors[0]}.jpg" if selected_floors else None
     if image_path_a and os.path.exists(image_path_a):
-        st.image(image_path_a, caption=f"{project_a.title()} - {selected_floors[0]}", use_container_width=True)
+        st.image(image_path_a, caption=f"{project_a} - {selected_floors[0]}", use_container_width=True)
     else:
-        st.info(f"No image found for {project_a.title()} - {selected_floors[0]}")
+        st.info(f"No image found for {project_a} - {selected_floors[0]}")
 
 with col2:
     image_path_b = f"images/{project_b.replace(' ', '_')}_{selected_floors[0]}.jpg" if selected_floors else None
     if image_path_b and os.path.exists(image_path_b):
-        st.image(image_path_b, caption=f"{project_b.title()} - {selected_floors[0]}", use_container_width=True)
+        st.image(image_path_b, caption=f"{project_b} - {selected_floors[0]}", use_container_width=True)
     else:
-        st.info(f"No image found for {project_b.title()} - {selected_floors[0]}")
+        st.info(f"No image found for {project_b} - {selected_floors[0]}")
+
+# ==== ALTair bar charts ====
 
 st.subheader("Total Built-up Area by Project")
 
-# Filter area data for selected projects and floors only (use lowercase for filter)
+# Filter area data for selected projects and floors only
 df_area_filtered = df_area[
     (df_area["Project"].isin([project_a, project_b])) &
     (df_area["Floor"].isin(selected_floors))
