@@ -84,25 +84,6 @@ project_a = st.sidebar.selectbox("Select project A", projects)
 project_b = st.sidebar.selectbox("Select project B", projects, index=1 if len(projects) > 1 else 0)
 selected_floors = st.sidebar.multiselect("Select floors to compare (stacked)", floors, default=floors)
 
-# Filter df for project_a and selected floors to get valid rooms for highlight
-valid_rooms_a = df[
-    (df["project"] == project_a) &
-    (df["floor"].isin(selected_floors))
-]["room"].unique()
-valid_rooms_a = sorted([r.strip() for r in valid_rooms_a if isinstance(r, str)])
-
-# Same for project_b
-valid_rooms_b = df[
-    (df["project"] == project_b) &
-    (df["floor"].isin(selected_floors))
-]["room"].unique()
-valid_rooms_b = sorted([r.strip() for r in valid_rooms_b if isinstance(r, str)])
-
-# Combine rooms from both projects, add 'All'
-highlight_room_options = ["All"] + sorted(set(valid_rooms_a + valid_rooms_b))
-
-highlight_room = st.sidebar.selectbox("Highlight room", highlight_room_options)
-
 # Add a column with renamed room group for color mapping
 def map_room_group(room_raw):
     if not isinstance(room_raw, str):
@@ -122,12 +103,8 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
         for idx, row in df_floor.iterrows():
             room_raw = row["room"].strip().lower() if isinstance(row["room"], str) else ""
             room_group = rename_map.get(room_raw, "Other")
-            
-            # Highlight only if room matches exactly and highlight_room not "All"
-            if highlight_room != "All" and room_raw == highlight_room.strip().lower():
-                room_color = "red"
-            else:
-                room_color = get_color(room_group)
+
+            room_color = get_color(room_group)
 
             x0_scaled = row["x0"] * scale
             x1_scaled = row["x1"] * scale
