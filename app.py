@@ -27,13 +27,9 @@ def load_area_data():
 df_layout = load_layout_data()
 df_area = load_area_data()
 
-# Clean strings for merging (lowercase keys for consistent matching)
+# Clean strings for merging
 for col in ["project", "floor", "room"]:
-    df_layout[col] = df_layout[col].astype(str).str.strip().str.lower()
-
-df_area["Project"] = df_area["Project"].str.lower().str.strip()
-df_area["Floor"] = df_area["Floor"].str.lower().str.strip()
-df_area["Room"] = df_area["Room"].str.lower().str.strip()
+    df_layout[col] = df_layout[col].astype(str).str.strip()
 
 # Merge layout and area data
 df = pd.merge(
@@ -45,14 +41,13 @@ df = pd.merge(
 )
 
 rename_map = {
-    "living": "Living", "kitchen": "Kitchen", "utility": "Utility", "parking": "Parking",
-    "guest bedroom1": "Guest Bedroom", "attd. toilet 1": "Toilet", "dress 1": "Dress",
-    "master bedroom 2": "Master Bedroom", "attd. toilet 2": "Toilet", "dress 2": "Dress",
-    "balcony": "Balcony", "children bedroom 3": "Children Bedroom", "dress 3": "Dress",
-    "attd. toilet 3": "Toilet", "family room": "Family Room", "sit out": "Sit Out",
-    "master bedroom 4": "Master Bedroom", "attd. toilet 4": "Toilet",
-    "wash area & c.toilet": "Wash Area & Toilet", "bar counter": "Bar Counter", "terrace": "Terrace",
-    # Add more mappings as needed from your data
+    "LIVING": "Living", "KITCHEN": "Kitchen", "UTILITY": "Utility", "PARKING": "Parking",
+    "GUEST BEDROOM1": "Guest Bedroom", "ATTD.TOILET 1": "Toilet", "DRESS 1": "Dress",
+    "MASTER BEDROOM 2": "Master Bedroom", "ATTD.TOILET 2": "Toilet", "DRESS 2": "Dress",
+    "BALCONY": "Balcony", "CHILDREN BEDROOM 3": "Children Bedroom", "DRESS 3": "Dress",
+    "ATTD.TOILET 3": "Toilet", "FAMILY ROOM": "Family Room", "SIT OUT": "Sit Out",
+    "MASTER BEDROOM 4": "Master Bedroom", "ATTD.TOILET 4": "Toilet",
+    "WASH AREA & C.TOILET": "Wash Area & Toilet", "BAR COUNTER": "Bar Counter", "TERRACE": "Terrace"
 }
 
 color_map = {
@@ -74,7 +69,7 @@ project_a = st.sidebar.selectbox("Select project A", projects)
 project_b = st.sidebar.selectbox("Select project B", projects, index=1 if len(projects) > 1 else 0)
 selected_floors = st.sidebar.multiselect("Select floors to compare (stacked)", floors, default=floors)
 
-df["Room Grouped"] = df["room"].map(rename_map).fillna("Other")
+df["Room Grouped"] = df["room"].str.strip().map(rename_map).fillna("Other")
 
 scale = 1.5
 vertical_gap = 50
@@ -97,8 +92,8 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
             area = row.get("Area (sqft)", "N/A")
 
             text = (
-                f"Room: {row['room'].title()}<br>"
-                f"Floor: {floor.upper()}<br>"
+                f"Room: {row['room']}<br>"
+                f"Floor: {floor}<br>"
                 f"Length: {length} ft<br>"
                 f"Breadth: {breadth} ft<br>"
                 f"Area: {area} sqft"
@@ -124,7 +119,7 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
                     x=[(x0_scaled + x1_scaled) / 2],
                     y=[(y0_scaled + y1_scaled) / 2],
                     mode="text",
-                    text=[row["room"].title()],
+                    text=[row["room"]],
                     showlegend=False,
                     hoverinfo="skip",
                     textfont=dict(color="black", size=10),
@@ -135,7 +130,7 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
 df_a = df[df["project"] == project_a]
 df_b = df[df["project"] == project_b]
 
-fig = make_subplots(rows=1, cols=2, subplot_titles=[project_a.title(), project_b.title()], horizontal_spacing=0.1)
+fig = make_subplots(rows=1, cols=2, subplot_titles=[project_a, project_b], horizontal_spacing=0.1)
 
 add_room_traces(fig, df_a, col=1, floors_to_show=selected_floors)
 add_room_traces(fig, df_b, col=2, floors_to_show=selected_floors)
@@ -158,31 +153,33 @@ fig.update_layout(
     height=800,
     margin=dict(l=10, r=10, t=50, b=10),
     showlegend=False,
-    title_text=f"Floor Plans: {project_a.title()} vs {project_b.title()} (Floors: {', '.join(f.upper() for f in selected_floors)})",
+    title_text=f"Floor Plans: {project_a} vs {project_b} (Floors: {', '.join(selected_floors)})",
 )
 
 st.plotly_chart(fig, use_container_width=True)
 
-# Show floor plan images side by side if available (for first selected floor)
+# Show floor plan images side by side if available
 col1, col2 = st.columns(2)
 
 with col1:
-    image_path_a = None
     if selected_floors:
         image_path_a = f"images/{project_a.replace(' ', '_')}_{selected_floors[0]}.jpg"
-    if image_path_a and os.path.exists(image_path_a):
-        st.image(image_path_a, caption=f"{project_a.title()} - {selected_floors[0].upper()}", use_container_width=True)
+        if os.path.exists(image_path_a):
+            st.image(image_path_a, caption=f"{project_a} - {selected_floors[0]}", use_container_width=True)
+        else:
+            st.info(f"No image found for {project_a} - {selected_floors[0]}")
     else:
-        st.info(f"No image found for {project_a.title()} - {selected_floors[0].upper()}" if selected_floors else "No floor selected")
+        st.info("Select at least one floor to see floor plan image for Project A.")
 
 with col2:
-    image_path_b = None
     if selected_floors:
         image_path_b = f"images/{project_b.replace(' ', '_')}_{selected_floors[0]}.jpg"
-    if image_path_b and os.path.exists(image_path_b):
-        st.image(image_path_b, caption=f"{project_b.title()} - {selected_floors[0].upper()}", use_container_width=True)
+        if os.path.exists(image_path_b):
+            st.image(image_path_b, caption=f"{project_b} - {selected_floors[0]}", use_container_width=True)
+        else:
+            st.info(f"No image found for {project_b} - {selected_floors[0]}")
     else:
-        st.info(f"No image found for {project_b.title()} - {selected_floors[0].upper()}" if selected_floors else "No floor selected")
+        st.info("Select at least one floor to see floor plan image for Project B.")
 
 # ==== ALTair bar charts ====
 
@@ -209,10 +206,9 @@ st.subheader("Room Area Comparison")
 
 room_chart = alt.Chart(df_area_filtered).mark_bar().encode(
     x=alt.X("Room:N", sort=None),
-    y="Area (sqft):Q",
-    color="Project:N",
-    tooltip=["Project", "Floor", "Room", "Area (sqft)"],
-    column="Project:N"
-).properties(width=250, height=300)
+    y=alt.Y("Area (sqft):Q"),
+    color=alt.Color("Project:N"),
+    tooltip=["Project", "Floor", "Room", "Length (ft)", "Breadth (ft)", "Area (sqft)"]
+).properties(width=700, height=400).interactive()
 
 st.altair_chart(room_chart, use_container_width=True)
