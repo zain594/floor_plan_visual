@@ -17,21 +17,17 @@ def load_layout_data():
 @st.cache_data
 def load_area_data():
     df_area = pd.read_csv("floor_plan_comparison.csv")
-    # Clean columns and string data for merging
     df_area.columns = [col.strip() for col in df_area.columns]
     for col in ["Project", "Floor", "Room"]:
         df_area[col] = df_area[col].astype(str).str.strip()
     return df_area
 
-# Load data
 df_layout = load_layout_data()
 df_area = load_area_data()
 
-# Clean strings for merging
 for col in ["project", "floor", "room"]:
     df_layout[col] = df_layout[col].astype(str).str.strip()
 
-# Merge layout and area data
 df = pd.merge(
     df_layout,
     df_area,
@@ -40,7 +36,6 @@ df = pd.merge(
     how="left"
 )
 
-# Rename map matching your exact raw room names (lowercase keys)
 rename_map = {
     "attd. toilet 1": "Toilet",
     "bedroom 1": "Bedroom",
@@ -74,7 +69,6 @@ color_map = {
 def get_color(room_group):
     return color_map.get(room_group, color_map["Other"])
 
-# Sidebar inputs
 st.sidebar.title("🏘️ Floor Plan Comparison Tool")
 
 projects = sorted(df["project"].unique())
@@ -84,7 +78,6 @@ project_a = st.sidebar.selectbox("Select project A", projects)
 project_b = st.sidebar.selectbox("Select project B", projects, index=1 if len(projects) > 1 else 0)
 selected_floors = st.sidebar.multiselect("Select floors to compare (stacked)", floors, default=floors)
 
-# Add a column with renamed room group for color mapping
 def map_room_group(room_raw):
     if not isinstance(room_raw, str):
         return "Other"
@@ -182,7 +175,6 @@ fig.update_layout(
 
 st.plotly_chart(fig, use_container_width=True)
 
-# Show floor plan images side by side if available
 col1, col2 = st.columns(2)
 
 with col1:
@@ -199,11 +191,8 @@ with col2:
     else:
         st.info(f"No image found for {project_b} - {selected_floors[0]}")
 
-# ==== ALTair bar charts ====
-
 st.subheader("Total Built-up Area by Project")
 
-# Filter area data for selected projects and floors only
 df_area_filtered = df_area[
     (df_area["Project"].isin([project_a, project_b])) &
     (df_area["Floor"].isin(selected_floors))
