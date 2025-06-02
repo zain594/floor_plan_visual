@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as stMore actions
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -64,10 +64,26 @@ st.sidebar.title("🏘️ Floor Plan Comparison Tool")
 
 projects = sorted(df["project"].unique())
 floors = sorted(df["floor"].unique())
+rooms = ["All"] + sorted(df["room"].unique())
 
 project_a = st.sidebar.selectbox("Select project A", projects)
 project_b = st.sidebar.selectbox("Select project B", projects, index=1 if len(projects) > 1 else 0)
 selected_floors = st.sidebar.multiselect("Select floors to compare (stacked)", floors, default=floors)
+highlight_room = st.sidebar.selectbox("Highlight room", rooms)
+
+# --- Dynamically filter highlight rooms based on projects and floors ---
+filtered_rooms_df = df[
+    (df["project"].isin([project_a, project_b])) &
+    (df["floor"].isin(selected_floors))
+]
+
+available_rooms = sorted(
+    r for r in filtered_rooms_df["room"].dropna().unique()
+    if str(r).strip() != ""
+)
+
+highlight_room = st.sidebar.selectbox("Highlight room", ["All"] + available_rooms)
+# ---------------------------------------------------------------------
 
 df["Room Grouped"] = df["room"].str.strip().map(rename_map).fillna("Other")
 
@@ -81,6 +97,8 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
         y_offset = floor_to_offset[floor]
         for idx, row in df_floor.iterrows():
             room_color = get_color(row["Room Grouped"])
+            if highlight_room != "All" and row["room"] == highlight_room:
+                room_color = "red"
 
             x0_scaled = row["x0"] * scale
             x1_scaled = row["x1"] * scale
@@ -162,25 +180,20 @@ st.plotly_chart(fig, use_container_width=True)
 col1, col2 = st.columns(2)
 
 with col1:
-    if selected_floors:
-        image_path_a = f"images/{project_a.replace(' ', '_')}_{selected_floors[0]}.jpg"
-        if os.path.exists(image_path_a):
-            st.image(image_path_a, caption=f"{project_a} - {selected_floors[0]}", use_container_width=True)
-        else:
-            st.info(f"No image found for {project_a} - {selected_floors[0]}")
+    image_path_a = f"images/{project_a.replace(' ', '_')}_{selected_floors[0]}.jpg" if selected_floors else None
+    if image_path_a and os.path.exists(image_path_a):
+        st.image(image_path_a, caption=f"{project_a} - {selected_floors[0]}", use_container_width=True)
     else:
-        st.info("Select at least one floor to see floor plan image for Project A.")
+        st.info(f"No image found for {project_a} - {selected_floors[0]}")
 
 with col2:
-    if selected_floors:
-        image_path_b = f"images/{project_b.replace(' ', '_')}_{selected_floors[0]}.jpg"
-        if os.path.exists(image_path_b):
-            st.image(image_path_b, caption=f"{project_b} - {selected_floors[0]}", use_container_width=True)
-        else:
-            st.info(f"No image found for {project_b} - {selected_floors[0]}")
+    image_path_b = f"images/{project_b.replace(' ', '_')}_{selected_floors[0]}.jpg" if selected_floors else None
+    if image_path_b and os.path.exists(image_path_b):
+        st.image(image_path_b, caption=f"{project_b} - {selected_floors[0]}", use_container_width=True)
     else:
-        st.info("Select at least one floor to see floor plan image for Project B.")
+        st.info(f"No image found for {project_b} - {selected_floors[0]}")
 
+# ==== ADD ALTair bar charts here ====
 # ==== ALTair bar charts ====
 
 st.subheader("Total Built-up Area by Project")
