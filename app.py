@@ -9,7 +9,7 @@ st.title("Residential Project Floor Plan & Area Comparison")
 # Load CSV data
 @st.cache_data
 def load_data():
-    return pd.read_csv("floor_plan_visual/floor_plan_comparison.csv")
+    return pd.read_csv("floor_plan_comparison.csv")
 
 df_area = load_data()
 
