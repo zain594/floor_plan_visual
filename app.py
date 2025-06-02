@@ -1,6 +1,6 @@
-import streamlit as st
+import streamlit as stMore actions
 import pandas as pd
-import plotly.graph_objects as go
+import plotly.graph_objects as goMore actions
 from plotly.subplots import make_subplots
 import altair as alt
 import os
@@ -95,17 +95,17 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
     floor_to_offset = {f: idx * vertical_gap for idx, f in enumerate(floors_to_show)}
     for floor in floors_to_show:
         df_floor = df_proj[df_proj["floor"] == floor]
-        x_offset = floor_to_offset[floor]  # NOTE: changed from y_offset
+        y_offset = floor_to_offset[floor]
         for idx, row in df_floor.iterrows():
             room_raw = row["room"].strip().lower() if isinstance(row["room"], str) else ""
             room_group = rename_map.get(room_raw, "Other")
 
             room_color = get_color(room_group)
 
-            x0_scaled = (row["x0"] + x_offset) * scale  # horizontal offset added here
-            x1_scaled = (row["x1"] + x_offset) * scale
-            y0_scaled = row["y0"] * scale
-            y1_scaled = row["y1"] * scale
+            x0_scaled = row["x0"] * scale
+            x1_scaled = row["x1"] * scale
+            y0_scaled = (row["y0"] + y_offset) * scale
+            y1_scaled = (row["y1"] + y_offset) * scale
 
             length = row.get("Length (ft)", "N/A")
             breadth = row.get("Breadth (ft)", "N/A")
@@ -147,20 +147,6 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
                 row=1, col=col
             )
 
-
-            fig.add_trace(
-                go.Scatter(
-                    x=[(x0_scaled + x1_scaled) / 2],
-                    y=[(y0_scaled + y1_scaled) / 2],
-                    mode="text",
-                    text=[row["room"].title() if isinstance(row["room"], str) else "N/A"],
-                    showlegend=False,
-                    hoverinfo="skip",
-                    textfont=dict(color="black", size=10),
-                ),
-                row=1, col=col
-            )
-
 df_a = df[df["project"] == project_a]
 df_b = df[df["project"] == project_b]
 
@@ -170,15 +156,14 @@ add_room_traces(fig, df_a, col=1, floors_to_show=selected_floors)
 add_room_traces(fig, df_b, col=2, floors_to_show=selected_floors)
 
 max_x = max(
-    ((df_a["x1"] + vertical_gap * (len(selected_floors) - 1)) * scale).max() if not df_a.empty else 100,
-    ((df_b["x1"] + vertical_gap * (len(selected_floors) - 1)) * scale).max() if not df_b.empty else 100
+    (df_a["x1"] * scale).max() if not df_a.empty else 100,
+    (df_b["x1"] * scale).max() if not df_b.empty else 100
 ) + 10
 
 max_y = max(
-    (df_a["y1"] * scale).max() if not df_a.empty else 100,
-    (df_b["y1"] * scale).max() if not df_b.empty else 100
+    ((df_a["y1"] + vertical_gap * (len(selected_floors) - 1)) * scale).max() if not df_a.empty else 100,
+    ((df_b["y1"] + vertical_gap * (len(selected_floors) - 1)) * scale).max() if not df_b.empty else 100
 ) + 10
-
 
 for i in [1, 2]:
     fig.update_xaxes(visible=False, scaleanchor=f"y{i}", scaleratio=1, row=1, col=i, range=[-10, max_x])
@@ -239,5 +224,4 @@ room_chart = alt.Chart(df_area_filtered).mark_bar().encode(
     width=200,   # reduced from 300
     height=400
 ).interactive()
-
 
