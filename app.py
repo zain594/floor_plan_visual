@@ -165,6 +165,7 @@ max_y = max(
     ((df_b["y1"] + vertical_gap * (len(selected_floors) - 1)) * scale).max() if not df_b.empty else 100
 ) + 10
 
+
 for i in [1, 2]:
     fig.update_xaxes(visible=False, scaleanchor=f"y{i}", scaleratio=1, row=1, col=i, range=[-10, max_x])
     fig.update_yaxes(visible=False, autorange="reversed", row=1, col=i, range=[-10, max_y])
