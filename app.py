@@ -162,9 +162,19 @@ max_x = (all_x1 * scale).max() + 10
 max_y = ((all_y1 + vertical_gap * (len(selected_floors) - 1)) * scale).max() + 10
 
 
-for i in [1, 2]:
-    fig.update_xaxes(visible=False, scaleanchor=f"y{i}", scaleratio=1, row=1, col=i, range=[-10, max_x])
-    fig.update_yaxes(visible=False, autorange="reversed", row=1, col=i, range=[-10, max_y])
+# Individual project bounds
+max_x_a = (df_a["x1"] * scale).max() + 10 if not df_a.empty else 100
+max_y_a = ((df_a["y1"] + vertical_gap * (len(selected_floors) - 1)) * scale).max() + 10 if not df_a.empty else 100
+
+max_x_b = (df_b["x1"] * scale).max() + 10 if not df_b.empty else 100
+max_y_b = ((df_b["y1"] + vertical_gap * (len(selected_floors) - 1)) * scale).max() + 10 if not df_b.empty else 100
+
+fig.update_xaxes(visible=False, row=1, col=1, range=[-10, max_x_a])
+fig.update_yaxes(visible=False, autorange="reversed", row=1, col=1, range=[-10, max_y_a])
+
+fig.update_xaxes(visible=False, row=1, col=2, range=[-10, max_x_b])
+fig.update_yaxes(visible=False, autorange="reversed", row=1, col=2, range=[-10, max_y_b])
+
 
 fig.update_layout(
     height=800,
