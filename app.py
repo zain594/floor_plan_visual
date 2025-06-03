@@ -74,15 +74,12 @@ st.sidebar.title("Floor Plan Comparison Tool")
 projects = sorted(df["project"].unique())
 floors = sorted(df["floor"].unique())
 
-# 🟨 Select up to 5 projects
-selected_projects = st.sidebar.multiselect("Select up to 5 projects", projects, default=projects[:2])
-if len(selected_projects) < 2 or len(selected_projects) > 5:
-    st.warning("Please select between 2 and 5 projects.")
-    st.stop()
-
+project_a = st.sidebar.selectbox("Select project A", projects)
+project_b = st.sidebar.selectbox("Select project B", projects, index=1 if len(projects) > 1 else 0)
 default_floor = "Ground Floor" if "Ground Floor" in floors else floors[0]
 selected_floor = st.sidebar.selectbox("Select floor to compare", floors, index=floors.index(default_floor))
-selected_floors = [selected_floor]
+selected_floors = [selected_floor]  # Keep interface consistent
+
 
 def map_room_group(room_raw):
     if not isinstance(room_raw, str):
@@ -102,6 +99,7 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
         for idx, row in df_floor.iterrows():
             room_raw = row["room"].strip().lower() if isinstance(row["room"], str) else ""
             room_group = rename_map.get(room_raw, "Other")
+
             room_color = get_color(room_group)
 
             x0_scaled = row["x0"] * scale
@@ -149,23 +147,26 @@ def add_room_traces(fig, df_proj, col, floors_to_show):
                 row=1, col=col
             )
 
-# 🟧 Create subplot for each selected project
-fig = make_subplots(
-    rows=1,
-    cols=len(selected_projects),
-    subplot_titles=selected_projects,
-    horizontal_spacing=0.05
-)
+df_a = df[df["project"] == project_a]
+df_b = df[df["project"] == project_b]
 
-for idx, project in enumerate(selected_projects, start=1):
-    df_proj = df[df["project"] == project]
-    add_room_traces(fig, df_proj, col=idx, floors_to_show=selected_floors)
+fig = make_subplots(rows=1, cols=2, subplot_titles=[project_a, project_b], horizontal_spacing=0.1)
 
-# 🟩 Dynamically calculate layout dimensions
-max_x = max((df[df["project"] == proj]["x1"] * scale).max() for proj in selected_projects) + 10
-max_y = max(((df[df["project"] == proj]["y1"] + vertical_gap * (len(selected_floors) - 1)) * scale).max() for proj in selected_projects) + 10
+add_room_traces(fig, df_a, col=1, floors_to_show=selected_floors)
+add_room_traces(fig, df_b, col=2, floors_to_show=selected_floors)
 
-for i in range(1, len(selected_projects) + 1):
+max_x = max(
+    (df_a["x1"] * scale).max() if not df_a.empty else 100,
+    (df_b["x1"] * scale).max() if not df_b.empty else 100
+) + 10
+
+max_y = max(
+    ((df_a["y1"] + vertical_gap * (len(selected_floors) - 1)) * scale).max() if not df_a.empty else 100,
+    ((df_b["y1"] + vertical_gap * (len(selected_floors) - 1)) * scale).max() if not df_b.empty else 100
+) + 10
+
+
+for i in [1, 2]:
     fig.update_xaxes(visible=False, scaleanchor=f"y{i}", scaleratio=1, row=1, col=i, range=[-10, max_x])
     fig.update_yaxes(visible=False, autorange="reversed", row=1, col=i, range=[-10, max_y])
 
@@ -173,26 +174,31 @@ fig.update_layout(
     height=800,
     margin=dict(l=10, r=10, t=50, b=10),
     showlegend=False,
-    title_text=f"Floor Plans Comparison ({', '.join(selected_projects)}) - Floor: {selected_floors[0]}"
+    title_text=f"Floor Plans: {project_a} vs {project_b} (Floors: {', '.join(selected_floors)})",
 )
 
 st.plotly_chart(fig, use_container_width=True)
 
-# 🖼 Show image for each project
-st.subheader("Floor Plan Images")
-image_cols = st.columns(len(selected_projects))
-for i, project in enumerate(selected_projects):
-    image_path = f"images/{project.replace(' ', '_')}_{selected_floors[0]}.jpg"
-    with image_cols[i]:
-        if os.path.exists(image_path):
-            st.image(image_path, caption=f"{project} - {selected_floors[0]}", use_container_width=True)
-        else:
-            st.info(f"No image found for {project} - {selected_floors[0]}")
+col1, col2 = st.columns(2)
 
-# 📊 Total Built-up Area
+with col1:
+    image_path_a = f"images/{project_a.replace(' ', '_')}_{selected_floors[0]}.jpg" if selected_floors else None
+    if image_path_a and os.path.exists(image_path_a):
+        st.image(image_path_a, caption=f"{project_a} - {selected_floors[0]}", use_container_width=True)
+    else:
+        st.info(f"No image found for {project_a} - {selected_floors[0]}")
+
+with col2:
+    image_path_b = f"images/{project_b.replace(' ', '_')}_{selected_floors[0]}.jpg" if selected_floors else None
+    if image_path_b and os.path.exists(image_path_b):
+        st.image(image_path_b, caption=f"{project_b} - {selected_floors[0]}", use_container_width=True)
+    else:
+        st.info(f"No image found for {project_b} - {selected_floors[0]}")
+
 st.subheader("Total Built-up Area by Project")
+
 df_area_filtered = df_area[
-    (df_area["Project"].isin(selected_projects)) & 
+    (df_area["Project"].isin([project_a, project_b])) &
     (df_area["Floor"].isin(selected_floors))
 ]
 
@@ -207,7 +213,6 @@ bar_chart = alt.Chart(total_area).mark_bar().encode(
 
 st.altair_chart(bar_chart, use_container_width=True)
 
-# 📊 Room-wise Area Chart
 st.subheader("Room Area Comparison")
 
 room_chart = alt.Chart(df_area_filtered).mark_bar().encode(
@@ -217,8 +222,7 @@ room_chart = alt.Chart(df_area_filtered).mark_bar().encode(
     tooltip=["Project", "Floor", "Room", "Length (ft)", "Breadth (ft)", "Area (sqft)"],
     column=alt.Column("Project:N", title=None)
 ).properties(
-    width=200,
+    width=200,   # reduced from 300
     height=400
 ).interactive()
-
 st.altair_chart(room_chart, use_container_width=True)
