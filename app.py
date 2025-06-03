@@ -155,10 +155,11 @@ fig = make_subplots(rows=1, cols=2, subplot_titles=[project_a, project_b], horiz
 add_room_traces(fig, df_a, col=1, floors_to_show=selected_floors)
 add_room_traces(fig, df_b, col=2, floors_to_show=selected_floors)
 
-# Use entire dataset to find max dimensions (ensures consistent size)
-max_x = (df["x1"] * scale).max() + 10
-max_y = ((df["y1"] + vertical_gap * (len(selected_floors) - 1)) * scale).max() + 10
+all_x1 = pd.concat([df_a["x1"], df_b["x1"]])
+all_y1 = pd.concat([df_a["y1"], df_b["y1"]])
 
+max_x = (all_x1 * scale).max() + 10
+max_y = ((all_y1 + vertical_gap * (len(selected_floors) - 1)) * scale).max() + 10
 
 
 for i in [1, 2]:
