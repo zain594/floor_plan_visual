@@ -76,7 +76,7 @@ floors = sorted(df["floor"].unique())
 
 project_a = st.sidebar.selectbox("Select project A", projects)
 project_b = st.sidebar.selectbox("Select project B", projects, index=1 if len(projects) > 1 else 0)
-default_floor = "Ground Floor" if "Ground Floor" in floors else floors[0]
+default_floor = "GF" if "GF" in floors else floors[0]
 selected_floor = st.sidebar.selectbox("Select floor to compare", floors, index=floors.index(default_floor))
 selected_floors = [selected_floor]  # Keep interface consistent
 
