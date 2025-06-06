@@ -169,16 +169,11 @@ max_y_a = ((df_a["y1"] + vertical_gap * (len(selected_floors) - 1)) * scale).max
 max_x_b = (df_b["x1"] * scale).max() + 10 if not df_b.empty else 100
 max_y_b = ((df_b["y1"] + vertical_gap * (len(selected_floors) - 1)) * scale).max() + 10 if not df_b.empty else 100
 
-# Get global max dimensions for uniform scaling
-global_max_x = max(max_x_a, max_x_b)
-global_max_y = max(max_y_a, max_y_b)
+fig.update_xaxes(visible=False, row=1, col=1, range=[-10, max_x_a])
+fig.update_yaxes(visible=False, autorange="reversed", row=1, col=1, range=[-10, max_y_a])
 
-fig.update_xaxes(visible=False, row=1, col=1, range=[-10, global_max_x])
-fig.update_yaxes(visible=False, autorange="reversed", row=1, col=1, range=[-10, global_max_y])
-
-fig.update_xaxes(visible=False, row=1, col=2, range=[-10, global_max_x])
-fig.update_yaxes(visible=False, autorange="reversed", row=1, col=2, range=[-10, global_max_y])
-
+fig.update_xaxes(visible=False, row=1, col=2, range=[-10, max_x_b])
+fig.update_yaxes(visible=False, autorange="reversed", row=1, col=2, range=[-10, max_y_b])
 
 
 fig.update_layout(
@@ -186,8 +181,6 @@ fig.update_layout(
     margin=dict(l=10, r=10, t=50, b=10),
     showlegend=False,
     title_text=f"Floor Plans: {project_a} vs {project_b} (Floors: {', '.join(selected_floors)})",
-    yaxis=dict(scaleanchor="x", scaleratio=1),
-    yaxis2=dict(scaleanchor="x2", scaleratio=1)
 )
 
 
